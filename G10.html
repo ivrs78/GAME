@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE CATEGORY GAME</title>
+    <style>
+        :root {
+            --primary-font: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+            --team-a-color: #ff4757;
+            --team-b-color: #2ed573;
+            --dark-overlay: rgba(0, 0, 0, 0.75);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: var(--primary-font);
+            background: #222 url('Background.jpg') no-repeat center center fixed;
+            background-size: cover;
+            height: 100vh;
+            overflow: hidden;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px 0;
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 3px solid #ffb142;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ffb142;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        #scoreboard {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 40px;
+            background: rgba(0, 0, 0, 0.5);
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .team-score-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 20px;
+            border-radius: 50px;
+            border: 2px solid transparent;
+            min-width: 250px;
+        }
+
+        #score-card-a { border-color: var(--team-a-color); }
+        #score-card-b { border-color: var(--team-b-color); }
+
+        .host-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+
+        .score-display {
+            font-size: 2.5rem;
+            margin-left: auto;
+        }
+
+        #central-timer-container {
+            text-align: center;
+            min-width: 120px;
+        }
+
+        #timer-display {
+            font-size: 3.5rem;
+            background: #f1c40f;
+            color: #000;
+            padding: 5px 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px #f1c40f;
+            display: inline-block;
+            animation: pulse 1s infinite alternate;
+        }
+
+        #game-arena {
+            display: flex;
+            flex: 1;
+            position: relative;
+        }
+
+        .team-zone {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        #zone-a { border-right: 2px dashed rgba(255,255,255,0.3); }
+
+        .display-box {
+            width: 85%;
+            max-width: 450px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 250px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #dfe4ea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .game-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .options-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-option {
+            width: 100%;
+            padding: 12px;
+            font-family: var(--primary-font);
+            font-size: 1.4rem;
+            text-transform: lowercase;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #f1f2f6;
+            color: #2f3542;
+            transition: all 0.1s ease;
+            box-shadow: 0 4px 0 #ced6e0;
+        }
+
+        .btn-option:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--dark-overlay);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #category-modal h2 {
+            font-size: 3rem;
+            margin-bottom: 30px;
+            color: #fff;
+            text-shadow: 0 4px 8px #000;
+            text-align: center;
+        }
+
+        #category-picker-indicator {
+            font-size: 1.8rem;
+            color: #ffb142;
+            margin-bottom: 20px;
+        }
+
+        .category-buttons {
+            display: flex;
+            gap: 25px;
+        }
+
+        .btn-category {
+            font-family: var(--primary-font);
+            font-size: 1.8rem;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.4);
+            transition: transform 0.1s;
+        }
+
+        .btn-category:active { transform: translateY(4px); box-shadow: none; }
+        #cat-animals { background: #ff4757; }
+        #cat-rooms { background: #2ed573; }
+        #cat-actions { background: #1e90ff; }
+
+        #countdown-text {
+            font-size: 10rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 30px #f1c40f;
+        }
+
+        #banner-modal h2 {
+            font-size: 5rem;
+            color: #f1c40f;
+            text-shadow: 0 5px 10px #000;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #banner-sub {
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        .flash-correct { background: rgba(46, 213, 115, 0.4) !important; animation: pop 0.3s; }
+        .flash-wrong { background: rgba(255, 71, 87, 0.4) !important; animation: shake 0.3s; }
+
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+        @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .animate-zoom { animation: zoomIn 0.5s ease forwards; }
+        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <script>
+        const AudioEngine = {
+            ctx: null,
+            init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); },
+            play(type) {
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.25);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'countdown') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now); osc.stop(now + 0.15);
+                } else if (type === 'go') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(880, now);
+                    gain.gain.setValueAtTime(0.4, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                } else if (type === 'timeout') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(220, now);
+                    gain.gain.setValueAtTime(0.5, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                    osc.start(now); osc.stop(now + 0.8);
+                }
+            }
+        };
+    </script>
+
+    <header>
+        <h1>The Category Game</h1>
+    </header>
+
+    <section id="scoreboard">
+        <div class="team-score-card" id="score-card-a">
+            <img src="Host1.jpg" alt="Host A" class="host-avatar" onerror="Game.handleImageError(this)">
+            <span>TEAM A</span>
+            <span id="score-a" class="score-display">0</span>
+        </div>
+
+        <div id="central-timer-container">
+            <div id="timer-display">30</div>
+        </div>
+
+        <div class="team-score-card" id="score-card-b">
+            <span>TEAM B</span>
+            <span id="score-b" class="score-display">0</span>
+            <img src="Host2.jpg" alt="Host B" class="host-avatar" onerror="Game.handleImageError(this)">
+        </div>
+    </section>
+
+    <main id="game-arena">
+        <div class="team-zone" id="zone-a">
+            <div class="display-box">
+                <div class="image-container">
+                    <img id="img-a" class="game-img" src="" alt="Question A" onerror="Game.handleImageError(this)">
+                </div>
+                <div class="options-container" id="options-a"></div>
+            </div>
+        </div>
+
+        <div class="team-zone" id="zone-b">
+            <div class="display-box">
+                <div class="image-container">
+                    <img id="img-b" class="game-img" src="" alt="Question B" onerror="Game.handleImageError(this)">
+                </div>
+                <div class="options-container" id="options-b"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="category-modal" class="overlay">
+        <h2>Select Next Category</h2>
+        <div id="category-picker-indicator">Team A chooses!</div>
+        <div class="category-buttons">
+            <button class="btn-category" id="cat-animals" onclick="Game.selectCategory('animals')">Animals</button>
+            <button class="btn-category" id="cat-rooms" onclick="Game.selectCategory('rooms')">Rooms</button>
+            <button class="btn-category" id="cat-actions" onclick="Game.selectCategory('actions')">Action Words</button>
+        </div>
+    </div>
+
+    <div id="countdown-modal" class="overlay hidden">
+        <div id="countdown-text">3</div>
+    </div>
+
+    <div id="banner-modal" class="overlay hidden" onclick="Game.closeWinnerBanner()">
+        <div class="animate-zoom" style="text-align: center;">
+            <h2 id="banner-title">ROUND WINNER!</h2>
+            <p id="banner-sub">Team A wins this round!</p>
+            <p style="margin-top: 30px; font-size: 1.2rem; color: #aaa;">Click anywhere to continue</p>
+        </div>
+    </div>
+
+    <script>
+        const Dataset = {
+            animals: {
+                path: '',
+                allOptions: ['bear', 'lion', 'monkey', 'tiger', 'zebra'],
+                files: [
+                    { answer: 'bear', name: 'b1.jpg' }, { answer: 'bear', name: 'b2.jpg' }, { answer: 'bear', name: 'b3.jpg' }, { answer: 'bear', name: 'b4.jpg' }, { answer: 'bear', name: 'b5.jpg' },
+                    { answer: 'lion', name: 'l1.jpg' }, { answer: 'lion', name: 'l2.jpg' }, { answer: 'lion', name: 'l3.jpg' }, { answer: 'lion', name: 'l4.jpg' }, { answer: 'lion', name: 'l5.jpg' },
+                    { answer: 'monkey', name: 'm1.jpg' }, { answer: 'monkey', name: 'm2.jpg' }, { answer: 'monkey', name: 'm3.jpg' }, { answer: 'monkey', name: 'm4.jpg' }, { answer: 'monkey', name: 'm5.jpg' },
+                    { answer: 'tiger', name: 't1.jpg' }, { answer: 'tiger', name: 't2.jpg' }, { answer: 'tiger', name: 't3.jpg' }, { answer: 'tiger', name: 't4.jpg' }, { answer: 'tiger', name: 't5.jpg' },
+                    { answer: 'zebra', name: 'z1.jpg' }, { answer: 'zebra', name: 'z2.jpg' }, { answer: 'zebra', name: 'z3.jpg' }, { answer: 'zebra', name: 'z4.jpg' }, { answer: 'zebra', name: 'z5.jpg' }
+                ]
+            },
+            rooms: {
+                path: '',
+                allOptions: ['bathroom', 'bedroom', 'kitchen', 'dining room', 'living room'],
+                files: [
+                    { answer: 'bathroom', name: 'bathroom1.jpg' }, { answer: 'bathroom', name: 'bathroom2.jpg' }, { answer: 'bathroom', name: 'bathroom3.jpg' }, { answer: 'bathroom', name: 'bathroom4.jpg' }, { answer: 'bathroom', name: 'bathroom5.jpg' },
+                    { answer: 'bedroom', name: 'bedroom1.jpg' }, { answer: 'bedroom', name: 'bedroom2.jpg' }, { answer: 'bedroom', name: 'bedroom3.jpg' }, { answer: 'bedroom', name: 'bedroom4.jpg' }, { answer: 'bedroom', name: 'bedroom5.jpg' },
+                    { answer: 'kitchen', name: 'kitchen1.jpg' }, { answer: 'kitchen', name: 'kitchen2.jpg' }, { answer: 'kitchen', name: 'kitchen3.jpg' }, { answer: 'kitchen', name: 'kitchen4.jpg' }, { answer: 'kitchen', name: 'kitchen5.jpg' },
+                    { answer: 'dining room', name: 'dining1.jpg' }, { answer: 'dining room', name: 'dining2.jpg' }, { answer: 'dining room', name: 'dining3.jpg' }, { answer: 'dining room', name: 'dining4.jpg' }, { answer: 'dining room', name: 'dining5.jpg' },
+                    { answer: 'living room', name: 'living1.jpg' }, { answer: 'living room', name: 'living2.jpg' }, { answer: 'living room', name: 'living3.jpg' }, { answer: 'living room', name: 'living4.jpg' }, { answer: 'living room', name: 'living5.jpg' }
+                ]
+            },
+            actions: {
+                path: '', 
+                allOptions: ['cooking', 'eating', 'reading', 'sleeping', 'writing', 'running'],
+                files: [
+                    { answer: 'cooking', name: 'cook1.jpg' }, { answer: 'cooking', name: 'cook2.jpg' }, { answer: 'cooking', name: 'cook3.jpg' }, { answer: 'cooking', name: 'cook4.jpg' }, { answer: 'cooking', name: 'cook5.jpg' },
+                    { answer: 'eating', name: 'eat1.jpg' }, { answer: 'eating', name: 'eat2.jpg' }, { answer: 'eating', name: 'eat3.jpg' }, { answer: 'eating', name: 'eat4.jpg' }, { answer: 'eating', name: 'eat5.jpg' },
+                    { answer: 'reading', name: 'read1.jpg' }, { answer: 'reading', name: 'read2.jpg' }, { answer: 'reading', name: 'read3.jpg' }, { answer: 'reading', name: 'read4.jpg' }, { answer: 'reading', name: 'read5.jpg' },
+                    { answer: 'sleeping', name: 'sleep1.jpg' }, { answer: 'sleeping', name: 'sleep2.jpg' }, { answer: 'sleeping', name: 'sleep3.jpg' }, { answer: 'sleeping', name: 'sleep4.jpg' }, { answer: 'sleeping', name: 'sleep5.jpg' },
+                    { answer: 'writing', name: 'w1.jpg' }, { answer: 'writing', name: 'w2.jpg' }, { answer: 'writing', name: 'w3.jpg' }, { answer: 'writing', name: 'w4.jpg' }, { answer: 'writing', name: 'w5.jpg' },
+                    { answer: 'running', name: 'run1.jpg' }, { answer: 'running', name: 'run2.jpg' }, { answer: 'running', name: 'run3.jpg' }, { answer: 'running', name: 'run4.jpg' }, { answer: 'running', name: 'run5.jpg' }
+                ]
+            }
+        };
+
+        const Game = {
+            scoreA: 0, scoreB: 0, roundScoreA: 0, roundScoreB: 0,
+            currentCategory: null, roundTimer: null, timeLeft: 30, pickerTeam: 'A',
+            pools: { a: [], b: [] }, currentQuestion: { a: null, b: null },
+
+            init() {
+                this.updateScoreboardDisplay();
+                this.setPickerIndicator();
+            },
+
+            handleImageError(imgElement) {
+                let currentSrc = imgElement.src;
+                if (currentSrc.endsWith('.jpg')) {
+                    imgElement.src = currentSrc.replace('.jpg', '.JPG');
+                } else if (currentSrc.endsWith('.JPG')) {
+                    imgElement.src = currentSrc.replace('.JPG', '.png');
+                } else if (currentSrc.endsWith('.png')) {
+                    imgElement.src = currentSrc.replace('.png', '.PNG');
+                } else {
+                    imgElement.style.backgroundColor = '#444';
+                }
+            },
+
+            setPickerIndicator() {
+                document.getElementById('category-picker-indicator').innerText = `Team ${this.pickerTeam} chooses the next category!`;
+            },
+
+            selectCategory(categoryKey) {
+                this.currentCategory = categoryKey;
+                document.getElementById('category-modal').classList.add('hidden');
+                this.runCountdown();
+            },
+
+            runCountdown() {
+                const modal = document.getElementById('countdown-modal');
+                const text = document.getElementById('countdown-text');
+                modal.classList.remove('hidden');
+                
+                let count = 3;
+                text.innerText = count;
+                AudioEngine.play('countdown');
+
+                const interval = setInterval(() => {
+                    count--;
+                    if (count > 0) {
+                        text.innerText = count;
+                        AudioEngine.play('countdown');
+                    } else if (count === 0) {
+                        text.innerText = "GO!";
+                        AudioEngine.play('go');
+                    } else {
+                        clearInterval(interval);
+                        modal.classList.add('hidden');
+                        this.startRound();
+                    }
+                }, 1000);
+            },
+
+            generatePool(team) {
+                const catData = Dataset[this.currentCategory];
+                let items = [];
+                catData.files.forEach(item => {
+                    items.push({ answer: item.answer, src: item.name });
+                });
+                this.pools[team] = items.sort(() => Math.random() - 0.5);
+            },
+
+            startRound() {
+                this.roundScoreA = 0; this.roundScoreB = 0; this.timeLeft = 30;
+                document.getElementById('timer-display').innerText = this.timeLeft;
+                this.generatePool('a'); this.generatePool('b');
+                this.nextQuestion('a'); this.nextQuestion('b');
+
+                this.roundTimer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('timer-display').innerText = this.timeLeft;
+                    if (this.timeLeft <= 0) {
+                        clearInterval(this.roundTimer);
+                        this.endRound();
+                    }
+                }, 1000);
+            },
+
+            nextQuestion(team) {
+                if (this.pools[team].length === 0) this.generatePool(team);
+
+                let choice = null;
+                for (let i = 0; i < this.pools[team].length; i++) {
+                    let potential = this.pools[team][i];
+                    let opposingCurrent = (team === 'a') ? this.currentQuestion.b : this.currentQuestion.a;
+                    
+                    if (!opposingCurrent || opposingCurrent.src !== potential.src) {
+                        choice = this.pools[team].splice(i, 1)[0];
+                        break;
+                    }
+                }
+
+                if (!choice) choice = this.pools[team].shift();
+                this.currentQuestion[team] = choice;
+
+                const poolKeys = Dataset[this.currentCategory].allOptions;
+                let options = [choice.answer];
+                while(options.length < 3 && poolKeys.length >= 3) {
+                    let randomKey = poolKeys[Math.floor(Math.random() * poolKeys.length)];
+                    if(!options.includes(randomKey)) options.push(randomKey);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                document.getElementById(`img-${team}`).src = choice.src;
+                const container = document.getElementById(`options-${team}`);
+                container.innerHTML = '';
+
+                options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-option';
+                    
+                    // FIXED: Checks if category is animals, then dynamically adds a lowercase 's'
+                    btn.innerText = (this.currentCategory === 'animals') ? opt + 's' : opt;
+                    
+                    btn.onclick = () => this.handleAnswer(team, opt, btn);
+                    container.appendChild(btn);
+                });
+            },
+
+            handleAnswer(team, selected, button) {
+                const current = this.currentQuestion[team];
+                const zone = document.getElementById(`zone-${team}`);
+
+                if (selected === current.answer) {
+                    AudioEngine.play('correct');
+                    if(team === 'a') { this.scoreA += 5; this.roundScoreA += 5; }
+                    else { this.scoreB += 5; this.roundScoreB += 5; }
+                    zone.classList.add('flash-correct');
+                    setTimeout(() => zone.classList.remove('flash-correct'), 300);
+                } else {
+                    AudioEngine.play('wrong');
+                    if(team === 'a') { this.scoreA -= 3; this.roundScoreA -= 3; }
+                    else { this.scoreB -= 3; this.roundScoreB -= 3; }
+                    zone.classList.add('flash-wrong');
+                    setTimeout(() => zone.classList.remove('flash-wrong'), 300);
+                }
+                this.updateScoreboardDisplay();
+                this.nextQuestion(team);
+            },
+
+            updateScoreboardDisplay() {
+                document.getElementById('score-a').innerText = this.scoreA;
+                document.getElementById('score-b').innerText = this.scoreB;
+            },
+
+            endRound() {
+                AudioEngine.play('timeout');
+                document.getElementById('options-a').innerHTML = '';
+                document.getElementById('options-b').innerHTML = '';
+
+                let winnerText = "IT'S A TIE!";
+                let subtitle = `Both teams matched equally well this round!`;
+
+                if (this.roundScoreA > this.roundScoreB) {
+                    winnerText = "ROUND WINNER: TEAM A!";
+                    subtitle = `Team A scored ${this.roundScoreA} pts this round.`;
+                    this.pickerTeam = 'A';
+                } else if (this.roundScoreB > this.roundScoreA) {
+                    winnerText = "ROUND WINNER: TEAM B!";
+                    subtitle = `Team B scored ${this.roundScoreB} pts this round.`;
+                    this.pickerTeam = 'B';
+                }
+
+                document.getElementById('banner-title').innerText = winnerText;
+                document.getElementById('banner-sub').innerText = subtitle;
+                document.getElementById('banner-modal').classList.remove('hidden');
+            },
+
+            closeWinnerBanner() {
+                document.getElementById('banner-modal').classList.add('hidden');
+                this.setPickerIndicator();
+                document.getElementById('category-modal').classList.remove('hidden');
+            }
+        };
+
+        window.onload = () => { Game.init(); };
+    </script>
+</body>
+</html>
